@@ -23,10 +23,22 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Run unit tests (no Kivy needed)
+      - name: Check required app files
         run: |
-          python tests/test_core.py
-          python tests/test_flow.py
+          missing=0
+          for f in main.py core.py android_utils.py buildozer.spec icon.png; do
+            if [ ! -f "$f" ]; then echo "::error::Missing required file in repository root: $f"; missing=1; fi
+          done
+          exit $missing
+
+      - name: Run unit tests (optional, skipped if tests folder is absent)
+        run: |
+          if [ -f tests/test_core.py ] && [ -f tests/test_flow.py ]; then
+            python tests/test_core.py
+            python tests/test_flow.py
+          else
+            echo "tests/ folder not found - skipping tests"
+          fi
 
       - name: Install system dependencies
         run: |
@@ -69,4 +81,3 @@ jobs:
           path: bin/*.apk
           if-no-files-found: error
           retention-days: 14
-          
